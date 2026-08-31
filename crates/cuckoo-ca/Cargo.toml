@@ -1,0 +1,19 @@
+[package]
+name = "cuckoo-ca"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+cuckoo-core.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+rcgen.workspace = true
+rustls.workspace = true
+rustls-pemfile.workspace = true
+tokio-rustls.workspace = true
+dashmap.workspace = true
+dirs.workspace = true
+time.workspace = true

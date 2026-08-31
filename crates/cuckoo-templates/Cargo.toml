@@ -1,0 +1,13 @@
+[package]
+name = "cuckoo-templates"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+cuckoo-core.workspace = true
+cuckoo-store.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+regex.workspace = true
+once_cell.workspace = true

@@ -1,0 +1,45 @@
+[package]
+name = "cuckoo-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "cuckoo-server"
+path = "src/main.rs"
+
+[lib]
+name = "cuckoo_server"
+path = "src/lib.rs"
+
+[dependencies]
+cuckoo-core.workspace = true
+cuckoo-service.workspace = true
+cuckoo-store.workspace = true
+cuckoo-dto.workspace = true
+cuckoo-http.workspace = true
+cuckoo-ca.workspace = true
+cuckoo-flow.workspace = true
+cuckoo-platform.workspace = true
+cuckoo-proxy.workspace = true
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+dirs.workspace = true
+rand.workspace = true
+base64.workspace = true
+http.workspace = true
+futures.workspace = true
+sea-orm.workspace = true
+
+[build-dependencies]
+serde.workspace = true
+serde_json.workspace = true

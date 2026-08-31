@@ -1,0 +1,12 @@
+[package]
+name = "cuckoo-ws"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+cuckoo-core.workspace = true
+tokio.workspace = true
+tokio-tungstenite = "0.24"
+serde.workspace = true
+thiserror.workspace = true

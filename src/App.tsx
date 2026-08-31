@@ -1,50 +1,118 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { useState, useCallback } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useAtom } from "jotai";
+import { ResizablePanel } from "@/components/custom/ResizablePanel";
+import { CollectionTree } from "@/features/collections/CollectionTree";
+import { WorkspaceSelector } from "@/features/collections/WorkspaceSelector";
+import { RequestEditor } from "@/features/request-builder/RequestEditor";
+import { EnvironmentManager } from "@/features/settings/EnvironmentManager";
+import { ProxyDashboard } from "@/features/proxy/ProxyDashboard";
+import { apiFetch } from "@/lib/api/client";
+import type { PongResponse } from "@/lib/api/generated";
+import { appModeAtom } from "@/state/app";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [mode, setMode] = useAtom(appModeAtom);
+  const [pong, setPong] = useState<PongResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  const handlePing = useCallback(async () => {
+    try {
+      setError(null);
+      const result = await apiFetch<PongResponse>("/api/ping");
+      setPong(result);
+    } catch (e) {
+      setError(String(e));
+    }
+  }, []);
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <QueryClientProvider client={queryClient}>
+      <div className="flex h-screen flex-col bg-background text-foreground">
+        {/* 顶部模式切换 Tab（Client / Proxy），spec.md 6.2 节 */}
+        <header className="flex items-center gap-2 border-b px-2 py-1">
+          <div className="flex gap-1">
+            <button
+              className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
+                mode === "client"
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-accent"
+              }`}
+              onClick={() => setMode("client")}
+            >
+              Client
+            </button>
+            <button
+              className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
+                mode === "proxy"
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-accent"
+              }`}
+              onClick={() => setMode("proxy")}
+            >
+              Proxy
+            </button>
+          </div>
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+          {/* Workspace 选择器 */}
+          {mode === "client" && <WorkspaceSelector />}
+
+          {/* 环境切换 */}
+          {mode === "client" && <EnvironmentManager />}
+
+          {/* M0 端到端闭环验证 */}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={handlePing}
+              className="rounded border border-border bg-card px-3 py-1 text-sm font-medium shadow-sm hover:bg-accent"
+            >
+              Ping
+            </button>
+            {pong && (
+              <div className="rounded bg-muted p-2 text-xs">
+                <div>message: {pong.message}</div>
+                <div>server_time_ms: {pong.server_time_ms}</div>
+              </div>
+            )}
+            {error && (
+              <div className="rounded bg-red-100 p-2 text-xs text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                {error}
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* 主工作区：左侧边栏 + 右侧主面板（自研 ResizablePanel） */}
+        {mode === "client" ? (
+          <ResizablePanel
+            direction="horizontal"
+            className="flex-1"
+            initialRatio={0.25}
+          >
+            {/* 左侧：Collection 树 */}
+            <aside className="h-full overflow-hidden border-r bg-secondary/30">
+              <CollectionTree />
+            </aside>
+
+            {/* 右侧：请求编辑器 */}
+            <main className="h-full overflow-hidden">
+              <RequestEditor />
+            </main>
+          </ResizablePanel>
+        ) : (
+          <ProxyDashboard />
+        )}
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    </QueryClientProvider>
   );
 }
 
